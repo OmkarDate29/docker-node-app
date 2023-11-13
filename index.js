@@ -2,36 +2,29 @@ import express from 'express';
 import mongoose from 'mongoose';
 
 const app = express();
-const MONGO_URI = 'mongodb://mongoDB:27017/node-docker';
-const PORT = 3000;
+
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 const dataSchema = new mongoose.Schema({
-  name: String,
-  description: String,
+  string: String,
 });
-
 const Data = mongoose.model('Data', dataSchema);
 
 app.get('/', (req, res) => {
-  res.json({ message: 'Server is ON!' });
+  res.send(`
+    <form action="/submit" method="post">
+      <h1>Learning Docker!</h1>
+      <input type="text" name="inputData" id="inputData" />
+      <button type="submit">Submit</button>
+    </form>
+  `);
 });
 
-app.get('/data', async (req, res) => {
+app.post('/submit', async (req, res) => {
+  const inputData = req.body.inputData;
   try {
-    const items = await Data.find();
-    res.json(items);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Internal Server Error' });
-  }
-});
-
-app.post('/add', async (req, res) => {
-  try {
-    const newItem = new Data({
-      name: 'Omkar Date',
-      description: 'Learning Docker',
-    });
+    const newItem = new Data({ string: inputData });
     await newItem.save();
     res.status(201).json('Data Added!');
   } catch (error) {
@@ -40,16 +33,27 @@ app.post('/add', async (req, res) => {
   }
 });
 
-// connection to db
+app.delete('/delete', async (req, res) => {
+  await Data.deleteMany({});
+  res.status(200).json({ status: 'Ok' });
+});
+
+app.get('/data', async (req, res) => {
+  try {
+    const data = await Data.find();
+    res.json(data);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
 mongoose
-  .connect(process.env.MONGO_URI || MONGO_URI, {})
+  .connect(process.env.DB_URI)
   .then(() => {
-    // listen for requests
-    app.listen(process.env.PORT || PORT, () => {
+    app.listen(process.env.PORT, () => {
       console.log(
-        `Connected to DB & listening on http://localhost:${
-          process.env.PORT || PORT
-        }`
+        `Connected to DB & listening on http://localhost:${process.env.PORT}`
       );
     });
   })
