@@ -1,24 +1,23 @@
 version: '3'
 services:
-  node-app:
+  backend:
     # "build" is reference to locate Dockerfile
     build:
       context: .
+      target: ${NODE_ENV}
+    env_file:
+      - .env
     ports:
       - 3000:3000
     volumes:
-      - C:/Users/omkar/Desktop/node-app:/app      # to map the changes done in host machine and container
-    environment:
-      PORT: 3000
-      DB_URI: mongodb://mongodb:27017/docker-db    
-      # When using Docker Compose, services are often reachable by their service names only as hostnames.
-    restart: always      # restarts the container if it goes down
+      - C:/Users/omkar/Desktop/node-app:/app # to map the changes done in host machine and container
+    restart: always # restarts the container if it goes down
     # networks:
     #   - docker-network
     depends_on:
-      - mongodb
+      - db
 
-  mongodb:
+  db:
     image: mongo:latest
     restart: always
     # networks:
